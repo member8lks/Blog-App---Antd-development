@@ -1,0 +1,10 @@
+.toggle{
+    cursor: pointer;
+}
+.blogTitle{
+    display: flex;
+    padding: 0;
+    height: 28px;
+    align-items: center;
+    margin: 20px 16px;
+}
