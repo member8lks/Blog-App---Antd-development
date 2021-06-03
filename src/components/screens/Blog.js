@@ -1,9 +1,10 @@
 import React,{useEffect, useState} from "react";
-import { Divider, Row, Col, Input, Typography, Button, Card,List,Avatar } from "antd";
+import { Divider, Row, Col, Input, Typography, Button, Card,List,Avatar,message } from "antd";
 import {useParams} from 'react-router-dom'
 import axios from 'axios';
 const { Title, Paragraph, Text, Link } = Typography;
 import blogApi from '../Apis/blogApi';
+import commentApi from "../Apis/commentApi";
 import { SendOutlined } from "@ant-design/icons";
 const data = [
   {
@@ -34,6 +35,10 @@ const data = [
 function Blog() {
   const {id}=useParams()
   const [blog, setBlog] = useState([]);
+  const [comments,setComments]=useState([])
+  const [comment,setComment]=useState({
+    name: "guest",comment: "", blogId: id
+  });
   useEffect(() => {
     console.log("inside useeffect");
     blogApi
@@ -45,7 +50,42 @@ function Blog() {
       .catch((err) => {
         console.log(err);
       });
+
+      commentApi.get(`/`).then((res)=>{
+    // console.log("commentssssss++",res.data)
+    let data=res.data.filter((comment)=>comment.blogId==id)
+    console.log("data+++++",data)
+    setComments(data);
+    }).catch((err)=>{
+      console.log(err)
+    })
   }, []);
+
+  const _getData=()=>{
+    commentApi.get(`/`).then((res)=>{
+      // console.log("commentssssss++",res.data)
+      let data=res.data.filter((comment)=>comment.blogId==id)
+      console.log("data+++++",data)
+      setComments(data);
+      }).catch((err)=>{
+        console.log(err)
+      })
+  }
+
+const postComment=(e)=>{
+   e.preventDefault();
+   commentApi.post(`/`,comment).then((res)=>{
+     console.log("posted+",res);
+     _getData()
+     message.success(`Your comment has been added`, 10);
+     setComment({
+      name: "guest",comment: "", blogId: id
+    })
+   }).catch((e)=>{
+     console.log(e)
+   })
+}
+
   console.log("this is +", id)
   let date=new Date(blog.createdAt);
   console.log(date.toString())
@@ -87,15 +127,15 @@ function Blog() {
               <div className="comments" >
                 <List
                   itemLayout="horizontal"
-                  dataSource={data}
+                  dataSource={comments}
                   renderItem={(item) => (
                     <List.Item>
                       <List.Item.Meta
                         avatar={
                           <Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
                         }
-                       
-                        description="Ant Design, a design language for background applications, is refined by Ant UED Team"
+                         title={item.name}
+                        description={item.comment}
                       />
                     </List.Item>
                   )}
@@ -112,10 +152,12 @@ function Blog() {
                 }}
               >
                 <Input
-                  style={{ width: "90%", marginRight: "3px" }}
+                  style={{ width: "92%", marginRight: "3px", borderRadius: "30px", borderColor: "currentcolor" }}
                   placeholder="comment"
+                  value={comment.comment}
+                  onChange={(e)=>setComment({...comment,comment: e.target.value})}
                 />
-                <Button>
+                <Button onClick={postComment}>
                   <SendOutlined />
                 </Button>
               </div>
